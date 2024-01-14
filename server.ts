@@ -4,10 +4,10 @@ import connectDB from "./utils/db";
 
 dotenv.config(); // Load environment variables from .env file
 
-const PORT = process.env.PORT || 8000; // Use port from environment variable or default to 8000
+const PORT = Number(process.env.PORT) || 8000; // Convert to number and use default if necessary
 
-// Create server
-app.listen(PORT, () => {
-   console.log(`Server is connected on port ${PORT}`);
+// Create server and explicitly set it to listen on 127.0.0.1
+app.listen(PORT, '127.0.0.1', () => {
+   console.log(`Server is connected on http://127.0.0.1:${PORT}`);
    connectDB();
 });

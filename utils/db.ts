@@ -9,7 +9,7 @@ const connectDB = async () => {
         
       });
       console.log(`Connected to MongoDB : ${connection.connection.host}`);
-    } catch (error) {
+    } catch (error:any) {
       console.error(error.message);
       setTimeout(connectDB, 5000);
     }
