@@ -16,7 +16,7 @@ app.use(cookieParser());
 //cors=> cross origin recourse sharing 
 app.use(cors({
     origin:process.env.ORIGIN,
-}))
+}));
 
 //route api
 app.use('/api/v1', userRouter);

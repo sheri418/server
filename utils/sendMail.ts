@@ -1,13 +1,14 @@
-require('dotenv').config();
 import nodemailer, { Transporter } from 'nodemailer';
 import ejs from 'ejs';
 import path from 'path';
 
 interface EmailOptions {
-    email: string;
+    from?: string;
+    to: string;
     subject: string;
     template: string;
     data: { [key: string]: any };
+    html?: string; // Optional 'html' field
 }
 
 const sendMail = async (options: EmailOptions): Promise<void> => {
@@ -21,31 +22,36 @@ const sendMail = async (options: EmailOptions): Promise<void> => {
         },
     });
 
-    const { email, subject, template, data } = options;
+    const { to, subject, template, data, from } = options;
 
-    // Construct the path to the email template
-    const templatePath = path.join(__dirname, '..//mails', template);
+    let html = options.html; // Use provided HTML if available
 
-    // Debugging: Log the constructed path
-    console.log("EJS Template Path: ", templatePath);
+    if (!html) {
+        // Construct the path to the email template
+        const templatePath = path.join(__dirname, '../mails', template);
 
-    // Render the email template with EJS
-    let html;
-    try {
-        html = await ejs.renderFile(templatePath, data);
-    } catch (error) {
-        console.error("Error rendering EJS: ", error);
-        throw error; // Re-throw the error to handle it in the calling context
+        // Render the email template with EJS
+        try {
+            html = await ejs.renderFile(templatePath, data);
+        } catch (error) {
+            console.error("Error rendering EJS: ", error);
+            throw error;
+        }
     }
 
     const mailOptions = {
-        from: process.env.SMTP_MAIL,
-        to: email,
-        subject,
-        html
+        from: from || process.env.SMTP_MAIL, // Use 'from' if provided, else default
+        to: to,
+        subject: subject,
+        html: html
     };
 
-    await transporter.sendMail(mailOptions);
+    try {
+        await transporter.sendMail(mailOptions);
+    } catch (error) {
+        console.error("Error sending email: ", error);
+        throw error;
+    }
 };
 
 export default sendMail;

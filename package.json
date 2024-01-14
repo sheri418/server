@@ -25,6 +25,9 @@
   "dependencies": {
   
     
+  "@sendgrid/mail": "^8.1.0",
+  
+    
   "@types/bcryptjs": "^2.4.6",
   
     
@@ -70,7 +73,7 @@
   "jsonwebtoken": "^9.0.2",
   
     
-  "mongoose": "^8.0.3",
+  "mongoose": "^8.0.4",
   
     
   "nodemailer": "^6.9.8",

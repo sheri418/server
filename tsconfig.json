@@ -8,6 +8,8 @@
 {
    
   "compilerOptions": {
+
+    "typeRoots": ["./node_modules/@types", "./custom_types"],
     /* Visit https://aka.ms/tsconfig to read more about this file */
 
     /* Projects */

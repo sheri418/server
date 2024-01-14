@@ -5,80 +5,76 @@ import ErrorHandler from "../utils/ErrorHandling";
 import { catchAsyncError } from "../middleware/catchAsyncErrors";
 import Jwt, { Secret } from "jsonwebtoken";
 import ejs from "ejs";
-// import path from "path";
-const path = require('path');
-import { send } from "process";
+import path = require('path');
 import sendMail from "../utils/sendMail";
+import { generateToken } from '../utils/jwt';
 
-// register user
+// Define the structure of the registration body
 interface IRegistrationBody {
   name: string;
   email: string;
   password: string;
   avatar?: string;
 }
+
+// Define the structure for the activation token
+interface IActivationToken {
+  token: string;
+  activationCode: string;
+}
+
+// Function to handle user registration
 export const registrationUser = catchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { name, email, password } = req.body;
+      const { name, email, password } = req.body as IRegistrationBody;
       const isEmailExist = await userModel.findOne({ email });
-      //agr email paly sa ho
 
       if (isEmailExist) {
-        return next(new ErrorHandler("Email already exist", 400));
+        return next(new ErrorHandler("Email already exists", 400));
       }
-      const user: IRegistrationBody = {
-        name,
-        email,
-        password,
-      };
-      const activationToken = createActivationToken(user);
-      const activationCode = activationToken.activationCode;
 
-      const data = { user: { name: user.name }, activationCode };
+      const newUser: IRegistrationBody = { name, email, password };
+      const activationToken = createActivationToken(newUser);
+      const data = { user: { name: newUser.name }, activationCode: activationToken.activationCode };
+      const filePath = path.join(__dirname, '../mails/index.html');
 
-      const filePath = path.join(__dirname, '..//mails//index.html');
-
-
-      console.log(`The file path is: ${filePath}`); // This will output the file path to the console
-      
       const html = await ejs.renderFile(filePath, data);
-      
 
-      try {
-        await sendMail({
-          email: user.email,
-          subject: "Activate your account",
-          // template: " activation-mail.ejs",
-          template: " index.html",
-          data,
-        });
-        res.status(201).json({
-          success: true,
-          message: "Account activation required.",
-          details: `Please check your email (${
-            user.email ? user.email : "not available"
-          }) to activate your account.`,
-          data: {
-            email: user.email || "Email not provided",
-            activationToken: activationToken.token || "Token not generated",
-          },
-        });
-      } catch (error: any) {
-        return next(new ErrorHandler(error.message, 400));
-      }
+      await sendMail({
+        from: "your-email@example.com",
+        to: newUser.email,
+        subject: "Activate your account",
+        html, // Rendered HTML from EJS template
+        template: "index.html",
+        data,
+      });
+      // Saving user to database (ensure password is hashed)
+      const user = new userModel({
+        name: newUser.name,
+        email: newUser.email,
+        password: newUser.password, // Hash this password
+        isActivated: false
+      });
+
+      await user.save();
+
+      res.status(201).json({
+        success: true,
+        message: "Account activation required. Please check your email.",
+        data: {
+          email: newUser.email,
+          activationToken: activationToken.token
+        }
+      });
     } catch (error: any) {
       return next(new ErrorHandler(error.message, 400));
     }
   }
 );
 
-interface IActivationToken {
-  token: string;
-  activationCode: string;
-}
-
-export const createActivationToken = (user: any): IActivationToken => {
+// Create an activation token
+export const createActivationToken = (user: IRegistrationBody): IActivationToken => {
   const activationCode = Math.floor(1000 + Math.random() * 9000).toString();
 
   const token = Jwt.sign(
@@ -86,7 +82,7 @@ export const createActivationToken = (user: any): IActivationToken => {
       user,
       activationCode,
     },
-    process.env.ACTIVATION_SECRET as Secret, //
+    process.env.ACTIVATION_SECRET as Secret,
     {
       expiresIn: "5m",
     }
@@ -95,36 +91,47 @@ export const createActivationToken = (user: any): IActivationToken => {
   return { token, activationCode };
 };
 
-// activate user
-export const activateUser = catchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { name, email, password } = req.body; // Directly destructuring from req.body
+// Function to activate user account
+export const activateUser = catchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { activationToken } = req.body;
+      const decoded = Jwt.verify(activationToken, process.env.ACTIVATION_SECRET as Secret) as any;
+      const user = await userModel.findOne({ email: decoded.user.email });
+      if (!user) {
+        return next(new ErrorHandler("User not found", 404));
+      }
 
-    const existUser = await userModel.findOne({ email });
+      if (user.isActivated) {
+        return next(new ErrorHandler("User already activated", 400));
+      }
 
-    if (existUser) {
-      return next(new ErrorHandler("Email already exists", 400));
+      user.isActivated = true;
+      await user.save();
+
+      res.status(200).json({
+        success: true,
+        message: 'User successfully activated',
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email
+        }
+      });
+    } catch (error: any) {
+      return next(new ErrorHandler("Invalid or expired activation token", 400));
     }
 
-    const user = await userModel.create({
-      name,
-      email,
-      password,
-    });
 
-    res.status(201).json({ // Sending a response with status 201
-      success: true,
-      message: 'User successfully created',
-      user,
-    });
-  } catch (error: any) {
-    return next(new ErrorHandler(error.message, 400));
   }
-});
+);
+
+// ... (loginUser, logoutUser, etc.) ...
+
+
 
 
 // Login user
-
 interface ILoginRequest {
   email: string;
   password: string;
@@ -132,55 +139,64 @@ interface ILoginRequest {
 
 export const loginUser = catchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
   try {
-      const { email, password } = req.body as ILoginRequest;
+    const { email, password } = req.body as ILoginRequest;
 
-      // Validate email and password presence
-      if (!email || !password) {
-          return next(new ErrorHandler("Please enter email and password", 400));
-      }
+    if (!email || !password) {
+      return next(new ErrorHandler("Please enter email and password", 400));
+    }
 
-      // Attempt to find the user and include the password in the result
-      const user = await userModel.findOne({ email }).select("+password");
-      if (!user) {
-          return next(new ErrorHandler("Invalid email or password", 401)); // 401 for Unauthorized
-      }
+    const user = await userModel.findOne({ email }).select("+password");
+    if (!user) {
+      return next(new ErrorHandler("Invalid email or password", 401));
+    }
 
-      // Compare the provided password with the stored hash
-      const isPasswordMatch = await user.comparePassword(password);
-      if (!isPasswordMatch) {
-          return next(new ErrorHandler("Invalid email or password", 401));
-      }
+    const isPasswordMatch = await user.comparePassword(password);
+    if (!isPasswordMatch) {
+      return next(new ErrorHandler("Invalid email or password", 401));
+    }
 
-      // Handle successful login
-      // For example, generating a token, setting a response cookie, etc.
-      // ...
+    const token = generateToken(user as IUser);
 
-      // Send successful response
-      res.status(200).json({
-          success: true,
-          message: 'Login successful',
-          // Include other relevant data (e.g., user data, token) if needed
-      });
+       // Set cookie with the token
+       res.cookie('token', token, {
+        httpOnly: true, // The cookie is not accessible via JavaScript
+        secure: process.env.NODE_ENV === 'production', // Use 'Secure' in production
+        expires: new Date(Date.now() + 3600000), // Cookie expires in 1 hour
+        sameSite: 'lax' // CSRF protection
+    });
+    
+    const userData = {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+    };
+
+    res.status(200).json({
+      success: true,
+      message: 'Login successful',
+      token,
+      user: userData,
+    });
 
   } catch (error: any) {
-      // Error handling
-      return next(new ErrorHandler(error.message, 500)); // 500 for Internal Server Error
+    return next(new ErrorHandler(error.message, 500));
   }
 });
 
-
-//logout
-
+// Logout
 export const logoutUser = catchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        // Set the token or cookie to an empty value and make it expire immediately
-        res.cookie('token', '', { expires: new Date(Date.now()), httpOnly: true });
+  try {
+    res.cookie('token', '', { expires: new Date(Date.now()), httpOnly: true });
 
-        res.status(200).json({
-            success: true,
-            message: 'Successfully logged out'
-        });
-    } catch (error: any) {
-        return next(new ErrorHandler(error.message, 400));
-    }
+    res.status(200).json({
+      success: true,
+      message: 'Successfully logged out',
+    });
+  } catch (error: any) {
+    return next(new ErrorHandler(error.message, 400));
+  }
 });
+
+export
+
+  default { registrationUser, activateUser, loginUser, logoutUser };

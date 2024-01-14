@@ -1,114 +1,63 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style type="text/css">
-        /* Base */
+    <title>Account Activation</title>
+    <style>
         body {
+            font-family: 'Arial', sans-serif;
             margin: 0;
             padding: 0;
-            min-width: 100%;
-            font-family: Arial, sans-serif;
-            font-size: 16px;
-            line-height: 1.5;
-            background-color: #FAFAFA;
-            color: #222222;
+            background-color: #f4f4f4;
         }
-
-        a {
-            color: #000;
-            text-decoration: none;
-        }
-
-        h1 {
-            font-size: 24px;
-            font-weight: 700;
-            line-height: 1.25;
-            margin-top: 0;
-            margin-bottom: 15px;
-            text-align: center;
-        }
-
-        p {
-            margin-top: 0;
-            margin-bottom: 24px;
-        }
-
-        table td {
-            vertical-align: top;
-        }
-
-        /* Layout */
-        .email-wrapper {
+        .email-container {
             max-width: 600px;
-            margin: 0 auto;
-
-        }
-
-        .email-header {
-            background-color: #0070f3;
-            padding: 24px;
-            color: #ffffff;
-        }
-
-        .email-body {
-            padding: 24px;
-            background-color: #ffffff;
-        }
-
-        .email-footer {
-            background-color: #f6f6f6;
-            padding: 24px;
-        }
-
-        /* Buttons */
-        .button {
-            display: inline-block;
-            background-color: #0070f3;
-            color: #ffffff;
-            font-size: 16px;
-            font-weight: 700;
-            text-align: center;
-            text-decoration: none;
-            padding: 12px 24px;
-            border-radius: 4px;
-        }
-    </style>
+            margin:auto;
+            background: #e6f4ff;
+box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+font-size: 16px;
+color: #333333;
+}
+.email-header {
+background: #0096c7;
+color: #ffffff;
+padding: 20px;
+text-align: center;
+border-radius: 5px 5px 0 0;
+}
+.email-body {
+padding: 20px;
+}
+.email-footer {
+background: #0096c7;
+color: #ffffff;
+text-align: center;
+padding: 15px;
+border-radius: 0 0 5px 5px;
+}
+a {
+color: #0096c7;
+text-decoration: none;
+}
+a:hover {
+text-decoration: underline;
+}
+</style>
 </head>
-
 <body>
-    <div class="email-wrapper">
+    <div class="email-container">
         <div class="email-header">
             <h1>Welcome to Eskill</h1>
         </div>
         <div class="email-body">
-            <!-- dynamic user name show -->
             <p>Hello <%= user.name %>,</p>
-
-            <h2> activationCode </h2>
-            <p>Thank you for registering with Eskill. To
-                activate your account, please use the following
-                activation code:</p>
-            <h2>
-                <%= activationCode %>
-            </h2>
-
-            <p>Please enter this code on the activation page within
-                the next 5 minutes.</p>
-            <p>If you did not register
-                for a Eskill account, please ignore this
-                email.</p>
+            <p>Your activation code is: <strong><%= activationCode %></strong></p>
+            <p>Please use this code to activate your account</p>
         </div>
-
         <div class="email-footer">
-            <p>if you have any question, please feel free contact us at <a
-                    href="mailto:sherazgoraya418@gmail.com">sherazgoraya418@gmail.com</a></p>
-
+            <p>If you have any questions, feel free to contact us at <a href="mailto:sherazgoraya418@gmail.com">sherazgoraya418@gmail.com</a></p>
         </div>
     </div>
-
 </body>
-
 </html>
