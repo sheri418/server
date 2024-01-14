@@ -8,6 +8,7 @@ import ejs from "ejs";
 import path = require('path');
 import sendMail from "../utils/sendMail";
 import { generateToken } from '../utils/jwt';
+import { redis } from "../utils/redis";
 
 // Define the structure of the registration body
 interface IRegistrationBody {
@@ -187,7 +188,8 @@ export const loginUser = catchAsyncError(async (req: Request, res: Response, nex
 export const logoutUser = catchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
   try {
     res.cookie('token', '', { expires: new Date(Date.now()), httpOnly: true });
-
+const userId= req.user?._id || "";
+redis.del(userId);
     res.status(200).json({
       success: true,
       message: 'Successfully logged out',
