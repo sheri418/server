@@ -1,39 +1,56 @@
+
 import { Request, Response, NextFunction } from 'express';
-import { verifyToken } from '../utils/jwt';
-import ErrorHandler from '../utils/ErrorHandling'; // Assuming this is your error handler
-import { IUser } from '../models/user.model';
-
-
+import ErrorHandler from '../utils/ErrorHandling'; // Assuming ErrorHandler is defined
+// import { verifyToken } from '../utils/jwt'; // Assuming this is your JWT verification utility
+import { IUser } from '../models/user.model'; // Assuming IUser is your User type
+import jwt, { JwtPayload } from 'jsonwebtoken';
+import { catchAsyncError } from './catchAsyncErrors';
+import { redis } from '../utils/redis';
+import UserModel from '../models/user.model';
+// Extend the Express Request type to include the user property
 interface RequestWithUser extends Request {
-    user?: IUser; // Assuming IUser is your user type from the user model
+  user?: IUser; // Adding the user property to the Request type
 }
 
-export const authenticate = async (req: Request, res: Response, next: NextFunction) => {
-    let token = req.headers['authorization'];
+export const authenticate = catchAsyncError(async (req: RequestWithUser, res: Response, next: NextFunction) => {
+  const accessToken = req.cookies.access_token as string;
 
-    if (token && token.startsWith('Bearer ')) {
-        token = token.slice(7);
-    }
-
-    if (!token) {
-        return next(new ErrorHandler('No token provided', 401));
-    }
-
+  if (accessToken) {
     try {
-        const decoded = verifyToken(token) as IUser; // Cast to IUser
-        req.user = decoded;
-        next();
+      const decoded = jwt.verify(accessToken, process.env.ACCESS_TOKEN as string) as JwtPayload;
+      const user = await redis.get(decoded.id);
+      if (user) {
+        req.user = JSON.parse(user);
+        return next();
+      }
     } catch (error) {
-        return next(new ErrorHandler('Invalid token', 403));
+      console.error("Error verifying token:", error);
     }
-};
+  }
 
-// Validate user role
-export const authorizeRoles = (...roles: string[]) => {
-    return (req: RequestWithUser, res: Response, next: NextFunction) => {
-        if (!roles.includes(req.user?.role || "")) {
-            return next(new ErrorHandler(`Role: ${req.user?.role} is not allowed to access these resources`, 403));
-        }
-        next();
+  // Attempt to recognize the user by another means (e.g., a user ID)
+  const userId = req.cookies.userId; // Example: using a cookie to store user ID
+  if (userId) {
+    const user = await UserModel.findById(userId); // Fetch user from DB
+    if (user) {
+      req.user = user;
+      return next();
     }
+  }
+
+  // If no token and no user ID, proceed without authenticated user
+  next();
+});
+
+
+// Middleware to authorize user roles
+// validate user role
+export const authorizeRoles = (...roles: string[]) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    if (!roles.includes(req.user?.role || '')) {
+      // Corrected the string template syntax here
+      return next(new ErrorHandler(`Role: ${req.user?.role} is not allowed to access this resource`, 403));
+    }
+    next();
+  };
 };

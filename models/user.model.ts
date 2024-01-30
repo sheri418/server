@@ -21,6 +21,9 @@ export interface IUser extends Document {
     isActivated: boolean; // Tracks whether the user's account is activated
     courses: mongoose.Types.ObjectId[]; // Array of ObjectIds
     comparePassword: (password: string) => Promise<boolean>;
+
+    signAccessToken: () => string;
+    signRefreshToken: () => string;
 }
 
 const userSchema: Schema<IUser> = new mongoose.Schema({
@@ -41,7 +44,7 @@ const userSchema: Schema<IUser> = new mongoose.Schema({
     },
     password: {
         type: String,
-        required: [true, 'Please enter a password'],
+        
         minlength: [6, 'Password must be at least 6 characters'],
         select: false,
     },
@@ -74,12 +77,28 @@ userSchema.pre<IUser>('save', async function(next) {
     next();
 });
 
+// Sign access token
+userSchema.methods.signAccessToken = function() {
+    const secret = process.env.JWT_SECRET || 'default_jwt_secret';
+    const expiresIn = process.env.ACCESS_TOKEN_EXPIRE || '5'; // Default to 5 minutes if not set
+    return jwt.sign({ id: this._id }, secret, {
+    expiresIn: '${expiresIn}m'
+    });
+    }
+    
+    // Sign refresh token
+    userSchema.methods.signRefreshToken = function() {
+    const secret = process.env.JWT_SECRET || 'default_jwt_secret';
+    const expiresIn = process.env.REFRESH_TOKEN_EXPIRE || '3'; // Default to 3 days if not set
+    return jwt.sign({ id: this._id }, secret, {
+    expiresIn: '${expiresIn}d'
+    });
+    }
 
-
-// Compare password
-userSchema.methods.comparePassword = async function(enteredPassword: string): Promise<boolean> {
-return await bcrypt.compare(enteredPassword, this.password);
-};
+    // Compare password
+    userSchema.methods.comparePassword = async function(enteredPassword: string): Promise<boolean> {
+    return await bcrypt.compare(enteredPassword, this.password);
+    };
 
 const UserModel: Model<IUser> = mongoose.model('User', userSchema);
 export default UserModel;

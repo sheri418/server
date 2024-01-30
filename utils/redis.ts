@@ -13,6 +13,16 @@ const redis = new Redis(getRedisUrl());
 
 redis.on('connect', () => {
     console.log('Redis connected successfully');
+
+    // Adding test commands
+    // redis.set('testKey', 'testValue').then((result) => {
+    //     console.log('Test key set result:', result);
+    //     return redis.get('testKey');
+    // }).then((value) => {
+    //     console.log('Test key get value:', value);
+    // }).catch((err) => {
+    //     console.error('Redis command error:', err);
+    // });
 });
 
 redis.on('error', (err) => {
