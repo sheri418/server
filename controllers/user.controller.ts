@@ -171,7 +171,8 @@ export const loginUser = catchAsyncError(async (req: Request, res: Response, nex
       isActivated: user.isActivated,
       courses: user.courses,
     };
-
+ // Set user data in Redis
+ await redis.set(`user_${user._id}`, JSON.stringify(userData));
     // Set the user ID in a cookie
     res.cookie('userId', user._id.toString(), { httpOnly: true, maxAge: 180000 }); // 3 minutes expiration
 

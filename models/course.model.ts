@@ -58,7 +58,7 @@ const commentSchema = new Schema<IComment>({
 
 const reviewSchema = new Schema<IReview>({
     user: { type: Schema.Types.ObjectId, ref: 'User' },
-    rating: { type: Number, default: 0 },
+    rating: Number,
     comment: String,
     commentReplies: [commentSchema],
 });
@@ -72,10 +72,10 @@ const courseDataSchema = new Schema<ICourseData>({
     title: String,
     description: String,
     videoUrl: String,
-    // videoThumbnail: {
-    //     public_id: String, 
-    //     url: String
-    // },
+    videoThumbnail: {
+        public_id: String, 
+        url: String
+    },
     videoSection: String,
     videoLength: Number,
     videoPlayer: String,
