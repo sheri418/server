@@ -49,7 +49,7 @@ export const registrationUser = catchAsyncError(
       const html = await ejs.renderFile(filePath, data);
 
       await sendMail({
-        from: "your-email@example.com",
+        from: "sherazgoraya418@gmail.com",
         to: newUser.email,
         subject: "Activate your account",
         html, // Rendered HTML from EJS template

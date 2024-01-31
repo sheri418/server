@@ -1,14 +1,15 @@
 import mongoose, { Document, Model, Schema } from "mongoose";
-
+import { IUser } from "./user.model";
+import { Request, Response, NextFunction } from "express";
 // Define interfaces for the document properties
-interface IComment extends Document {
-    user: { type: Schema.Types.ObjectId, ref: 'User' }; // Reference to User model
-    comment: string;
-    commentReplies: IComment[];
+export interface IComment extends Document {
+    user: IUser; // Reference to User model
+    question: string;
+    questionReplies: IComment[];
 }
 
-interface IReview extends Document {
-    user: { type: Schema.Types.ObjectId, ref: 'User' };
+export interface IReview extends Document {
+    user: mongoose.Schema.Types.ObjectId;
     rating: number;
     comment: string;
     commentReplies: IComment[];
@@ -32,7 +33,7 @@ interface ICourseData extends Document {
     questions: IComment[];
 }
 
-interface ICourse extends Document {
+export interface ICourse extends Document {
     name: string;
     description: string;
     price: number;
@@ -43,7 +44,8 @@ interface ICourse extends Document {
     demoUrl: string;
     benefits: { title: string }[];
     prerequisites: { title: string }[];
-    reviews: IReview[];
+    // reviews: IReview[];
+    reviews: mongoose.Types.DocumentArray<IReview>;
     courseData: ICourseData[];
     ratings?: number;
     purchased?: number;
@@ -52,12 +54,12 @@ interface ICourse extends Document {
 // Schema definitions
 const commentSchema = new Schema<IComment>({
     user: { type: Schema.Types.ObjectId, ref: 'User' },
-    comment: String,
-    commentReplies: [{ type: Schema.Types.ObjectId, ref: 'Comment' }],
+    question: String,
+    questionReplies: [{ type: Schema.Types.ObjectId, ref: 'Comment' }],
 });
 
 const reviewSchema = new Schema<IReview>({
-    user: { type: Schema.Types.ObjectId, ref: 'User' },
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     rating: Number,
     comment: String,
     commentReplies: [commentSchema],

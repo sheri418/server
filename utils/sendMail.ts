@@ -9,6 +9,7 @@ interface EmailOptions {
     template: string;
     data: { [key: string]: any };
     html?: string; // Optional 'html' field
+    email?: string;
 }
 
 const sendMail = async (options: EmailOptions): Promise<void> => {
