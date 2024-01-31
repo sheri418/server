@@ -142,51 +142,59 @@ interface ILoginRequest {
   password: string;
 }
 
-export const loginUser = catchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { email, password } = req.body as ILoginRequest;
+export const loginUser = catchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { email, password } = req.body as ILoginRequest;
 
-    if (!email || !password) {
-      return next(new ErrorHandler("Please enter email and password", 400));
+      if (!email || !password) {
+        return next(new ErrorHandler("Please enter email and password", 400));
+      }
+
+      // Including courses in the query and populating them
+      const user = await userModel.findOne({ email }).select("+password").populate('courses');
+
+      if (!user) {
+        return next(new ErrorHandler("Invalid email or password", 401));
+      }
+
+      const isPasswordMatch = await user.comparePassword(password);
+      if (!isPasswordMatch) {
+        return next(new ErrorHandler("Invalid email or password", 401));
+      }
+
+      const userData = {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        avatar: user.avatar, // Assuming avatar data is correctly structured
+        isVerified: user.isVerified,
+        isActivated: user.isActivated,
+        courses: user.courses, // Include the courses array
+        createdAt: user.createdAt ? user.createdAt : null,
+        updatedAt: user.updatedAt ? user.updatedAt : null,
+      };
+      
+      // Set user data in Redis
+      await redis.set(`user_${user._id}`, JSON.stringify(userData));
+
+      // Set the user ID in a cookie
+      res.cookie('userId', user._id.toString(), { httpOnly: true, maxAge: 180000 }); // 3 minutes expiration
+
+      res.status(200).json({
+        success: true,
+        message: 'Login successful',
+        user: userData,
+      });
+
+    } catch (error: any) {
+      return next(new ErrorHandler(error.message, 500));
     }
-
-    const user = await userModel.findOne({ email }).select("+password");
-    if (!user) {
-      return next(new ErrorHandler("Invalid email or password", 401));
-    }
-
-    const isPasswordMatch = await user.comparePassword(password);
-    if (!isPasswordMatch) {
-      return next(new ErrorHandler("Invalid email or password", 401));
-    }
-
-    const userData = {
-      id: user._id,
-      name: user.name,
-      email: user.email,
-      // Removed password from the response data for security
-      role: user.role,
-      avatar:user.avatar,
-      isVerified: user.isVerified,
-      isActivated: user.isActivated,
-      courses: user.courses,
-    };
- // Set user data in Redis
- await redis.set(`user_${user._id}`, JSON.stringify(userData));
-    // Set the user ID in a cookie
-    res.cookie('userId', user._id.toString(), { httpOnly: true, maxAge: 180000 }); // 3 minutes expiration
-
-
-    res.status(200).json({
-      success: true,
-      message: 'Login successful',
-      user: userData,
-    });
-
-  } catch (error: any) {
-    return next(new ErrorHandler(error.message, 500));
   }
-});
+);
+
+
 // Logout
 export const logoutUser = catchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -252,7 +260,7 @@ export const logoutUser = catchAsyncError(async (req: Request, res: Response, ne
 //   }
 // });
 
-//ge tuser info
+//get user info
 export const getUserInfo = catchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
   try {
     if (req.user) {

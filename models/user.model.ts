@@ -21,7 +21,8 @@ export interface IUser extends Document {
     isActivated: boolean; // Tracks whether the user's account is activated
     courses: mongoose.Types.ObjectId[]; // Array of ObjectIds
     comparePassword: (password: string) => Promise<boolean>;
-
+    createdAt?: { $date: { $numberLong: string } };
+    updatedAt?: { $date: { $numberLong: string } };
     signAccessToken: () => string;
     signRefreshToken: () => string;
 }
