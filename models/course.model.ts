@@ -60,9 +60,13 @@ const commentSchema = new Schema<IComment>({
 
 const reviewSchema = new Schema<IReview>({
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    rating: Number,
+    // rating: Number,
+    rating:{
+type:Number,
+default:0,
+    },
     comment: String,
-    commentReplies: [commentSchema],
+    commentReplies: [Object],
 });
 
 const linkSchema = new Schema<ILink>({

@@ -418,8 +418,10 @@ export const addReplyToReview = catchAsyncError(
         user: req.user, // Assuming req.user is populated with user data
         comment,
       };
-
-      course.reviews.push(replyData); // Adding the reply to the replies array of the review
+if(!review.commentReplies){
+  review.commentReplies=[];
+}
+      review.commentReplies?.push(replyData); // Adding the reply to the replies array of the review
 
       await course?.save();
 

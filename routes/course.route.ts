@@ -12,7 +12,7 @@ courseRouter.get("/get-course-content/:id",authenticate , getCourseByUser);
 courseRouter.put("/add-question",authenticate , addQuestion);
 courseRouter.put("/add-answer",authenticate , addAnswer);
 courseRouter.put("/add-review/:id",authenticate , addReview);
-courseRouter.put("/reply-review",authenticate , addReplyToReview);
+courseRouter.put("/reply-review",authenticate ,authorizeRoles("admin") ,addReplyToReview);
 
 
 export default courseRouter;
