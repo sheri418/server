@@ -68,6 +68,7 @@ const userSchema: Schema<IUser> = new mongoose.Schema({
     courses: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Course',
+        default:[] // Ensure a default value is set
     }],
 }, { timestamps: true });
 

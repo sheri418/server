@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Confirmation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: #ffffff;
+            width: 90%;
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .message-sm {
+            color: #333333;
+        }
+        h1 {
+            color: #024959; /* Dark Blue for VIP feeling */
+        }
+        .course-info, .footer {
+            color: #333;
+        }
+        table {
+            background-color: #fff;
+            color: #333;
+            border-collapse: collapse;
+            width: 100%;
+        }
+        th {
+            background-color: #024959; /* Dark Blue */
+            color: #FFD700; /* Gold */
+        }
+        td, th {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        .footer {
+            font-size: 0.9em;
+            margin-top: 20px;
+        }
+        .footer a {
+            color: #FFD700; /* Gold link for a luxurious feel */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="message-sm">
+            <h1>Your ELearning Order is Confirmed!</h1>
+            <p>And we're just as excited as you are.</p>
+        </div>
+        <div class="course-info">
+            <h4>Here's what you ordered:</h4>
+            <table>
+                <tr>
+                    <td>Order #: <%= order._id %></td>
+                    <td>Order Date: <%= order.date %></td>
+                </tr>
+            </table>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Qty</th>
+                        <th>Cost</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><%= order.name %></td>
+                        <td>1</td>
+                        <td>$<%= order.price %></td>
+                    </tr>
+                </tbody>
+            </table>
+            <table>
+                <tr>
+                    <td>Subtotal:</td>
+                    <td>$<%= order.price %></td>
+                </tr>
+                <tr>
+                    <td>Total:</td>
+                    <td>$<%= order.price %></td>
+                </tr>
+            </table>
+        </div>
+        <div class="footer">
+            <p>If you have any questions, please contact our support team at <a href="mailto:sherazgoraya418@gmail.com">sherazgoraya418@gmail.com</a>.</p>
+        </div>
+    </div>
+</body>
+</html>
