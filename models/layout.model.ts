@@ -1,5 +1,9 @@
-import { Schema, model, Document } from "mongoose";
+import mongoose, { Schema, model, Document } from "mongoose";
 
+interface Image {
+    public_id: string;
+    url: string;
+  }
 interface FaqItem extends Document {
   question: string;
   answer: string;
@@ -10,11 +14,12 @@ interface Category extends Document {
 }
 
 interface BannerImage extends Document {
+    image: Image;
   public_id: string;
   url: string;
 }
 
-interface Layout extends Document {
+interface Layout extends Document<any> {
     type: string;
     faq: FaqItem[];
     categories: Category[];
@@ -50,6 +55,6 @@ interface Layout extends Document {
     },
   });
   
-  const LayoutModel = model<Layout>('Layout', layoutSchema);
+  const LayoutModel = mongoose.model<Layout>('Layout', layoutSchema);
   
   export default LayoutModel;
