@@ -490,4 +490,51 @@ export const updateUserRole = catchAsyncError(async (req: Request, res: Response
       message: 'User role updated successfully',
   });
 });
+
+//delete user -- only admin
+// Delete user function, wrapped in CatchAsyncError for asynchronous error handling
+// deleteUser is an asynchronous function, now including a try-catch block for error handling
+export const deleteUser = catchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
+  try {
+      // Extract the user ID from the request parameters
+      const { id } = req.params;
+
+      // Attempt to find the user by ID in the database
+      const user = await userModel.findById(id);
+
+      // If no user is found, throw a custom error to be caught by the catch block
+      if (!user) {
+          throw new ErrorHandler("User not found", 404);
+      }
+
+      // Delete the user document
+      await user.deleteOne();
+
+      // Additionally, delete any associated cache from Redis using the user ID
+      await redis.del(id);
+
+      // Respond with a success message indicating the user has been deleted
+      res.status(200).json({
+          success: true,
+          message: "User deleted successfully",
+      });
+  } catch (error:any) {
+      // If an error occurs, pass it to the next error handler
+      return next (new ErrorHandler(error.message,400));
+      
+  }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
 export default { registrationUser, activateUser, loginUser, logoutUser, updateUserInfo };
