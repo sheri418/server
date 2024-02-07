@@ -38,3 +38,12 @@ export const getUserById = async (id: string, res: Response) => {
     res.status(500).json({ success: false, message: errorMessage });
   }
 };
+
+// Get All users
+export const getAllUsersService = async (res: Response) => {
+  const users = await UserModel.find().sort({ createdAt: -1 });
+  res.status(201).json({
+  success: true,
+  users,
+  });
+  };

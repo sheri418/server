@@ -8,6 +8,7 @@ import path from "path";
 import ejs from "ejs";
 import sendMail from "../utils/sendMail";
 import NotificationModel from "../models/notification.model";
+import { getAllOrderService } from "../services/order.service";
 
 export const createOrder = catchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -89,3 +90,14 @@ export const createOrder = catchAsyncError(async (req: Request, res: Response, n
         return next(new ErrorHandler(error.message, 500));
     }
 });
+
+//get all order only for admin
+export const getAllOrders = catchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      // Call the service and await its result
+      getAllOrderService(res);
+    } catch (error: any) {
+      // Error handling remains the same
+      return next(new ErrorHandler(error.message, error.statusCode || 500));
+    }
+  });

@@ -14,6 +14,7 @@ import sendMail from '../utils/sendMail';
 
 import nodemailer from 'nodemailer';
 import { title } from "process";
+import { getAllCourseService } from "../services/course.service";
 // Assuming catchAsyncError is a middleware for handling async errors
 export const uploadCourse = catchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -435,3 +436,15 @@ if(!review.commentReplies){
     }
   }
 );
+
+//
+// get all courses - only for admin
+export const getAllUsers = catchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    // Call the service and await its result
+    getAllCourseService(res);
+  } catch (error: any) {
+    // Error handling remains the same
+    return next(new ErrorHandler(error.message, error.statusCode || 500));
+  }
+});

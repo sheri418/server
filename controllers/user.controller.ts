@@ -11,10 +11,9 @@ import sendMail from "../utils/sendMail";
 import { redis } from "../utils/redis";
 import jwt, { JwtPayload } from 'jsonwebtoken';
 // import {  verifyToken } from '../utils/jwt';
-import { getUserById } from "../services/user.service";
+import { getUserById, getAllUsersService } from '../services/user.service';
 import { sendToken } from "../utils/jwt";
 import { v2 as cloudinary } from "cloudinary";
-
 
 // Define the structure of the registration body
 interface IRegistrationBody {
@@ -468,4 +467,15 @@ export const updateProfilePicture = catchAsyncError(
     }
   }
 );
+
+// get all users - only for admin
+export const getAllUsers = catchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    // Call the service and await its result
+    getAllUsersService(res);
+  } catch (error: any) {
+    // Error handling remains the same
+    return next(new ErrorHandler(error.message, error.statusCode || 500));
+  }
+});
 export default { registrationUser, activateUser, loginUser, logoutUser, updateUserInfo };
