@@ -11,7 +11,7 @@ import sendMail from "../utils/sendMail";
 import { redis } from "../utils/redis";
 import jwt, { JwtPayload } from 'jsonwebtoken';
 // import {  verifyToken } from '../utils/jwt';
-import { getUserById, getAllUsersService } from '../services/user.service';
+import { getUserById, getAllUsersService, updateUserRoleService } from '../services/user.service';
 import { sendToken } from "../utils/jwt";
 import { v2 as cloudinary } from "cloudinary";
 
@@ -477,5 +477,17 @@ export const getAllUsers = catchAsyncError(async (req: Request, res: Response, n
     // Error handling remains the same
     return next(new ErrorHandler(error.message, error.statusCode || 500));
   }
+});
+
+// Assuming updateUserRoleService is an async function that updates the user's role
+// and CatchAsyncError is a higher-order function for error handling
+
+export const updateUserRole = catchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
+  const { id, role } = req.body; // Corrected destructuring syntax
+  await updateUserRoleService(res,id, role); // Assuming this function exists and returns a promise
+  res.status(200).json({
+      status: 'success',
+      message: 'User role updated successfully',
+  });
 });
 export default { registrationUser, activateUser, loginUser, logoutUser, updateUserInfo };
