@@ -15,6 +15,7 @@ import sendMail from '../utils/sendMail';
 import nodemailer from 'nodemailer';
 import { title } from "process";
 import { getAllCourseService } from "../services/course.service";
+import userRouter from '../routes/user.route';
 // Assuming catchAsyncError is a middleware for handling async errors
 export const uploadCourse = catchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -446,5 +447,37 @@ export const getAllUsers = catchAsyncError(async (req: Request, res: Response, n
   } catch (error: any) {
     // Error handling remains the same
     return next(new ErrorHandler(error.message, error.statusCode || 500));
+  }
+});
+
+//delete  course only admin
+export const deleteCourse = catchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
+  try {
+      // Extract the user ID from the request parameters
+      const { id } = req.params;
+
+      // Attempt to find the user by ID in the database
+      const course = await CourseModel.findById(id);
+
+      // If no user is found, throw a custom error to be caught by the catch block
+      if (!course) {
+          throw new ErrorHandler("User not found", 404);
+      }
+
+      // Delete the user document
+      await course.deleteOne();
+
+      // Additionally, delete any associated cache from Redis using the user ID
+      await redis.del(id);
+
+      // Respond with a success message indicating the user has been deleted
+      res.status(200).json({
+          success: true,
+          message: "Course deleted successfully",
+      });
+  } catch (error:any) {
+      // If an error occurs, pass it to the next error handler
+      return next (new ErrorHandler(error.message,400));
+      
   }
 });

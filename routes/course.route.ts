@@ -1,5 +1,5 @@
 import express from "express";
-import { addAnswer, addQuestion, addReview, editCourse, getAllCourses, getCourseByUser, getSingleCourse, uploadCourse, addReplyToReview } from "../controllers/course.controller"; 
+import { addAnswer, addQuestion, addReview, editCourse, getAllCourses, getCourseByUser, getSingleCourse, uploadCourse, addReplyToReview, deleteCourse } from "../controllers/course.controller"; 
 import { authorizeRoles, authenticate } from "../middleware/auth.middleware";
 
 const courseRouter = express.Router();
@@ -15,6 +15,8 @@ courseRouter.put("/add-review/:id",authenticate , addReview);
 courseRouter.put("/reply-review",authenticate ,authorizeRoles("admin") ,addReplyToReview);
 
 courseRouter.get("/get-Allcourses",authenticate ,authorizeRoles("admin") ,getAllCourses);
+
+courseRouter.delete("/delete-course/:id",authenticate ,authorizeRoles("admin") ,deleteCourse);
 
 
 export default courseRouter;
