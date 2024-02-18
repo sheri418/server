@@ -179,7 +179,8 @@ export const loginUser = catchAsyncError(
       await redis.set(`user_${user._id}`, JSON.stringify(userData));
 
       // Set the user ID in a cookie
-      res.cookie('userId', user._id.toString(), { httpOnly: true, maxAge: 180000 }); // 3 minutes expiration
+      res.cookie('userId', user._id.toString(), { httpOnly: true, maxAge: 10 * 60 * 1000 }); // 10 minutes expiration
+
 // Log cookies being set
 console.log('Cookies set during login:', res.getHeaders()['set-cookie']);
 
@@ -197,14 +198,41 @@ console.log('Cookies set during login:', res.getHeaders()['set-cookie']);
 
 
 // Logout
+// export const logoutUser = catchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
+//   try {
+//     // Clear the token cookie
+//     res.cookie('token', '', { expires: new Date(Date.now()), httpOnly: true });
+
+//     // Delete the session from Redis
+//     const userId = req.user?._id || "";
+//     redis.del(userId);
+
+//     // Send a success response
+//     res.status(200).json({
+//       success: true,
+//       message: 'Successfully logged out',
+//     });
+//   } catch (error) {
+//     // Check if error is an instance of Error and get the message
+//     let errorMessage = 'An error occurred';
+//     if (error instanceof Error) {
+//       errorMessage = error.message;
+//     }
+//     return next(new ErrorHandler(errorMessage, 400));
+//   }
+// });
+// Logout
 export const logoutUser = catchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
   try {
-    // Clear the token cookie
-    res.cookie('token', '', { expires: new Date(Date.now()), httpOnly: true });
+    // Clear the userId cookie
+    res.cookie('userId', '', { expires: new Date(Date.now()), httpOnly: true });
 
-    // Delete the session from Redis
+    // Delete the user data from Redis
     const userId = req.user?._id || "";
-    redis.del(userId);
+    await redis.del(`user_${userId}`); // Make sure to use the correct key for Redis
+
+    // Log cookies being cleared
+    console.log('Cookies cleared during logout:', res.getHeaders()['set-cookie']);
 
     // Send a success response
     res.status(200).json({
@@ -366,7 +394,7 @@ interface IUpdateUserInfo {
 export const updateUserInfo = catchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { name, email } = req.body as IUpdateUserInfo;
+      const { name} = req.body as IUpdateUserInfo;
       const userId = req.user?._id;
       const user = await userModel.findById(userId);
 
@@ -374,13 +402,13 @@ export const updateUserInfo = catchAsyncError(
         return next(new ErrorHandler("User not found", 404));
       }
 
-      if (email) {
-        const isEmailExist = await userModel.findOne({ email, _id: { $ne: userId } });
-        if (isEmailExist) {
-          return next(new ErrorHandler("Email already exists", 400));
-        }
-        user.email = email;
-      }
+      // if (email) {
+      //   const isEmailExist = await userModel.findOne({ email, _id: { $ne: userId } });
+      //   if (isEmailExist) {
+      //     return next(new ErrorHandler("Email already exists", 400));
+      //   }
+      //   user.email = email;
+      // }
 
       if (name) {
         user.name = name;
