@@ -180,6 +180,8 @@ export const loginUser = catchAsyncError(
 
       // Set the user ID in a cookie
       res.cookie('userId', user._id.toString(), { httpOnly: true, maxAge: 180000 }); // 3 minutes expiration
+// Log cookies being set
+console.log('Cookies set during login:', res.getHeaders()['set-cookie']);
 
       res.status(200).json({
         success: true,
@@ -258,6 +260,38 @@ export const logoutUser = catchAsyncError(async (req: Request, res: Response, ne
 //       return next(new ErrorHandler(error.message, 400));
 //   }
 // });
+// Assuming that you are using JWT for tokens and you have a function to generate tokens
+export const refreshAccessToken = async (req: Request, res: Response) => {
+  try {
+    const { refreshToken } = req.cookies;
+    if (!refreshToken) {
+      return res.status(401).json({ message: "No refresh token provided" });
+    }
+
+    // Runtime check to ensure environment variables are not undefined
+    const refreshTokenSecret = process.env.REFRESH_TOKEN_SECRET;
+    const accessTokenSecret = process.env.ACCESS_TOKEN_SECRET;
+
+    if (!refreshTokenSecret || !accessTokenSecret) {
+      console.error("Environment variables for token secrets are not set.");
+      return res.status(500).json({ message: "Server configuration error" });
+    }
+
+    // Verify the refresh token
+    const userData = jwt.verify(refreshToken, refreshTokenSecret);
+    
+    // Assuming userData has an id field; otherwise, adjust as necessary
+    const newAccessToken = jwt.sign({ id: (userData as any).id }, accessTokenSecret, { expiresIn: '1h' });
+
+    res.cookie('access_token', newAccessToken, { httpOnly: true, sameSite: 'strict' });
+
+    return res.status(200).json({ accessToken: newAccessToken });
+  } catch (error) {
+    console.error("Error refreshing access token:", error);
+    return res.status(403).json({ message: "Invalid refresh token" });
+  }
+};
+
 
 //get user info
 export const getUserInfo = catchAsyncError(async (req: Request, res: Response, next: NextFunction) => {

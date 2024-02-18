@@ -8,20 +8,24 @@ import { catchAsyncError } from './catchAsyncErrors';
 import { redis } from '../utils/redis';
 import UserModel from '../models/user.model';
 // Extend the Express Request type to include the user property
+
+
+
 interface RequestWithUser extends Request {
   user?: IUser; // Adding the user property to the Request type
 }
 
 export const authenticate = catchAsyncError(async (req: RequestWithUser, res: Response, next: NextFunction) => {
   const accessToken = req.cookies.access_token as string;
+ // Log cookies received from the client
+ console.log('Cookies received from client:', req.cookies);
 
   if (accessToken) {
     try {
       const decoded = jwt.verify(accessToken, process.env.ACCESS_TOKEN as string) as JwtPayload;
-      const user = await redis.get(decoded.id);
-      if (user) {
-        req.user = JSON.parse(user);
-        return next();
+      const user = await redis.get(`user_${decoded.id}`);
+      if (!user) {
+        return next(new ErrorHandler('User not found in cache', 401));
       }
     } catch (error) {
       console.error("Error verifying token:", error);
