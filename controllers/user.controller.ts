@@ -179,7 +179,9 @@ export const loginUser = catchAsyncError(
       await redis.set(`user_${user._id}`, JSON.stringify(userData));
 
       // Set the user ID in a cookie
-      res.cookie('userId', user._id.toString(), { httpOnly: true, maxAge: 10 * 60 * 1000 }); // 10 minutes expiration
+      // res.cookie('userId', user._id.toString(), { httpOnly: true, maxAge: 10 * 60 * 1000 }); // 10 minutes expiration
+      res.cookie('userId', user._id.toString(), { httpOnly: true, maxAge: 24 * 60 * 60 * 1000 }); // 1 day expiration
+
 
 // Log cookies being set
 console.log('Cookies set during login:', res.getHeaders()['set-cookie']);
