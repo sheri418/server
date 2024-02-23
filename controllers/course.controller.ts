@@ -19,39 +19,46 @@ import { getAllCourseService } from "../services/course.service";
 import userRouter from '../routes/user.route';
 // Assuming catchAsyncError is a middleware for handling async errors
 export const uploadCourse = catchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        console.log('Received data:', req.body); // Log incoming data for debugging
+  try {
+      console.log('Received data:', req.body); // Log incoming data for debugging
 
-        const data = req.body;
+      const data = req.body;
 
-        // Handle thumbnail upload if provided
-        if (data.thumbnail && typeof data.thumbnail.url === 'string') {
-            const myCloud = await cloudinary.v2.uploader.upload(data.thumbnail.url, {
-                folder: "courses"
-            });
+         // Add validation for required fields here
+    if (!data.demoUrl || !data.level || !data.price || !data.description || !data.name) {
+      console.log("Missing required fields: demoUrl, level, price, description, name");
+      return next(new ErrorHandler('Missing required course fields', 400));
+  }
 
-            data.thumbnail = {
-                public_id: myCloud.public_id, 
-                url: myCloud.secure_url
-            };
-        } else {
-            console.log("Thumbnail is not provided or is not a valid string");
-        }
+      // Handle thumbnail upload if provided
+      if (data.thumbnail && typeof data.thumbnail.url === 'string') {
+          const myCloud = await cloudinary.v2.uploader.upload(data.thumbnail.url, {
+              folder: "courses"
+          });
 
-        // Create a new course
-        const course = new CourseModel(data);
-        await course.save();
+          data.thumbnail = {
+              public_id: myCloud.public_id, 
+              url: myCloud.secure_url
+          };
+      } else {
+          console.log("Thumbnail is not provided or is not a valid string");
+      }
 
-        res.status(201).json({
-            success: true,
-            message: 'Course created successfully',
-            course
-        });
-    } catch (error: any) {
-        console.error('Error in uploadCourse:', error.message); // Log the error for debugging
-        return next(new ErrorHandler(error.message, 500));
-    }
+      // Create a new course
+      const course = new CourseModel(data);
+      await course.save();
+
+      res.status(201).json({
+          success: true,
+          message: 'Course created successfully',
+          course
+      });
+  } catch (error: any) {
+      console.error('Error in uploadCourse:', error.message); // Log the error for debugging
+      return next(new ErrorHandler(error.message, 500));
+  }
 });
+
 
 
 // edit course
@@ -140,15 +147,16 @@ export const editCourse = catchAsyncError(
   export const getAllCourses = catchAsyncError(
     async (req: Request, res: Response, next: NextFunction) => {
       try {
-        const isCacheExist = await redis.get("allCourses");
+        // const isCacheExist = await redis.get("allCourses");
   
-        if (isCacheExist) {
-          const courses = JSON.parse(isCacheExist);
-          res.status(200).json({
-            success: true,
-            courses,
-          });
-        } else {
+        // if (isCacheExist) {
+        //   const courses = JSON.parse(isCacheExist);
+        //   res.status(200).json({
+        //     success: true,
+        //     courses,
+        //   });
+        // } else {
+
           const courses = await CourseModel.find().select(
             "-courseData.videoUrl -courseData.suggestion -courseData.questions -courseData.links"
           );
@@ -159,7 +167,7 @@ export const editCourse = catchAsyncError(
             courses,
           });
         }
-      } catch (error: any) {
+      catch (error: any) {
         return next(new ErrorHandler(error.message, 500));
       }
     }
