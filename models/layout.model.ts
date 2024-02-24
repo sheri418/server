@@ -19,16 +19,26 @@ interface BannerImage extends Document {
   url: string;
 }
 
-interface Layout extends Document<any> {
-    type: string;
-    faq: FaqItem[];
-    categories: Category[];
-    banner: {
-      image: BannerImage;
-      title: string;
-      subTitle: string;
-    };
-  }
+// interface Layout extends Document<any> {
+//     type: string;
+//     faq: FaqItem[];
+//     categories: Category[];
+//     banner: {
+//       image: BannerImage;
+//       title: string;
+//       subTitle: string;
+//     };
+//   }
+export interface ILayout extends Document {
+  type: string;
+  faq: FaqItem[];
+  categories: Category[];
+  banner: {
+    image: BannerImage;
+    title: string;
+    subTitle: string;
+  };
+}
   
   const faqSchema = new Schema<FaqItem>({
     question: { type: String },
@@ -44,7 +54,7 @@ interface Layout extends Document<any> {
     url: { type: String },
   });
 
-  const layoutSchema = new Schema<Layout>({
+  const layoutSchema = new Schema<ILayout >({
     type: { type: String },
     faq: [faqSchema],
     categories: [categorySchema], // Corrected to be an array
@@ -55,6 +65,6 @@ interface Layout extends Document<any> {
     },
   });
   
-  const LayoutModel = mongoose.model<Layout>('Layout', layoutSchema);
+  const LayoutModel = mongoose.model<ILayout >('Layout', layoutSchema);
   
   export default LayoutModel;
