@@ -1,6 +1,7 @@
 import mongoose, { Document, Model, Schema } from "mongoose";
 import { IUser } from "./user.model";
 import { Request, Response, NextFunction } from "express";
+import { string } from "yup";
 // Define interfaces for the document properties
 export interface IComment extends Document {
     user: IUser; // Reference to User model
@@ -36,6 +37,7 @@ interface ICourseData extends Document {
 export interface ICourse extends Document {
     name: string;
     description: string;
+    categories:string; 
     price: number;
     estimatedPrice?: number;
     thumbnail: { public_id: string, url: string };
@@ -93,6 +95,10 @@ const courseDataSchema = new Schema<ICourseData>({
 const courseSchema = new Schema<ICourse>({
     name: { type: String, required: true },
     description: { type: String, required: true },
+    categories:{
+type:String,
+required:true,
+    },
     price: { type: Number, required: true },
     estimatedPrice: Number,
     thumbnail: {
